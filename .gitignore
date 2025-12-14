@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.venv
+venv/
+
+# Streamlit
+.streamlit/
+
+
+
+# Data
+data/
+!data/README.md
+
+# Models
+models/
+!models/README.md
+
+# OS
+.DS_Store
+Thumbs.db
