@@ -29,8 +29,9 @@ if uploaded is not None:
         st.image(
             cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB),
             caption="Gambar input (RGB)",
-            use_container_width=True
+            use_column_width=True
         )
+
 
         # prediksi
         label, conf, probs, meta = predict(frame_bgr, model_key=model_key)
