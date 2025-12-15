@@ -210,14 +210,11 @@ Evaluasi dilakukan pada validation set selama proses training.
 * Dataset FER2013 memiliki ketidakseimbangan kelas
 * Ekspresi wajah ambigu dapat menyebabkan mis-klasifikasi
 * Kualitas gambar (noise, pencahayaan) memengaruhi prediksi
-
+```
 bash
 python -m mlops.cli --model cnn --epochs 10
 python -m mlops.cli --model resnet --epochs 10
-
 ```
-
----
 
 ## ⚠ Limitations
 - Tidak mendukung real-time webcam (Streamlit limitation)
@@ -248,10 +245,10 @@ with proper attribution.
 ---
 
 ## 👤 Team
-**Randa Andriana Putra**  
-**Residen Nusantara R.M**
-**Kayla Amanda Sukma**
-**Farahanum Afifah A**
+**Randa Andriana Putra**  \
+**Residen Nusantara R.M** \
+**Kayla Amanda Sukma** \
+**Farahanum Afifah A** \
 **Safitri** 
 
 ---
