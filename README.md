@@ -1,5 +1,8 @@
 # 🎭 Emotion Recognition System (MLOps Project)
 
+🔗 Streamlit App: https://emotion-recognition-mlops.streamlit.app
+---
+
 ## 📌 Overview
 
 **Emotion Recognition System** adalah proyek *Machine Learning Operations (MLOps)* yang bertujuan untuk mengklasifikasikan emosi manusia berdasarkan gambar wajah. Proyek ini dibangun secara *end-to-end*, mulai dari training model *Deep Learning*, versioning model, retraining, hingga deployment ke aplikasi **Streamlit**.
