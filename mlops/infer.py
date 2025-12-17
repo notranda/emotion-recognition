@@ -36,18 +36,19 @@ def load_meta(model_key: str) -> dict:
     _meta_cache[model_key] = meta
     return meta
 
+def _ensure_dirs():
+    (ACTIVE_ROOT / "cnn").mkdir(parents=True, exist_ok=True)
+    (ACTIVE_ROOT / "resnet50").mkdir(parents=True, exist_ok=True)
+    ARCHIVE_ROOT.mkdir(parents=True, exist_ok=True)
+    NEW_DATA_ROOT.mkdir(parents=True, exist_ok=True)
 
-def load_model(model_key: str):
-    if model_key in _model_cache:
-        return _model_cache[model_key]
 
-    model_path = MODEL_DIRS[model_key] / "model.keras"
+def load_model(model_key: str) -> keras.Model:
+    model_path = ACTIVE_ROOT / model_key / "model.keras"
     if not model_path.exists():
-        raise FileNotFoundError(f"model.keras not found: {model_path}")
+        raise FileNotFoundError(f"Model path does not exist: {model_path}")
+    return keras.saving.load_model(str(model_path))
 
-    model = keras.saving.load_model(str(model_path))
-    _model_cache[model_key] = model
-    return model
 
 
 def preprocess_frame(frame_bgr, model_key: str, img_size: int):

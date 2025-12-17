@@ -46,9 +46,6 @@ def _archive_if_exists(model_key: str, version_new: str):
 
 
 def _merge_new_data_into_dataset(dataset_root: Path) -> Path:
-    """
-    Merge data/new_data/<label> into a staging folder so retrain uses both.
-    """
     staging = Path("data/_staging_merged")
     if staging.exists():
         shutil.rmtree(staging)
@@ -67,6 +64,7 @@ def _merge_new_data_into_dataset(dataset_root: Path) -> Path:
             shutil.copy2(img, target / img.name)
 
     return staging / "base"
+
 
 
 def _build_cnn(img_size: int, num_classes: int):
@@ -141,7 +139,7 @@ def retrain(
     batch_size: int | None = None,
 ):
     """
-    Train model (cnn/resnet50), save to models/active/<model_key>/
+    Train model (cnn/resnet50), save to models/active/<model_key>/.
     Outputs:
       - model.keras
       - meta.json
@@ -162,22 +160,14 @@ def retrain(
 
     version = _version_now()
 
-    # archive current active
+    # Archive current active model if it exists
     _archive_if_exists(model_key, version)
 
-    # merge new_data
+    # Merge new data with dataset
     merged_root = _merge_new_data_into_dataset(dataset_root_path)
 
-    # datagen
-    # untuk grayscale CNN -> color_mode grayscale
-    # untuk resnet50 -> color_mode rgb (tapi bisa saja dataset grayscale; aman)
-    if model_key == "cnn":
-        color_mode = "grayscale"
-        target_size = (img_size, img_size)
-    else:
-        color_mode = "rgb"
-        target_size = (img_size, img_size)
-
+    # Define image data generator
+    color_mode = "grayscale" if model_key == "cnn" else "rgb"
     train_datagen = ImageDataGenerator(
         rescale=1.0 / 255,
         validation_split=0.2,
@@ -188,7 +178,7 @@ def retrain(
 
     train_gen = train_datagen.flow_from_directory(
         directory=str(merged_root),
-        target_size=target_size,
+        target_size=(img_size, img_size),
         batch_size=batch_size,
         color_mode=color_mode,
         class_mode="categorical",
@@ -197,7 +187,7 @@ def retrain(
     )
     val_gen = train_datagen.flow_from_directory(
         directory=str(merged_root),
-        target_size=target_size,
+        target_size=(img_size, img_size),
         batch_size=batch_size,
         color_mode=color_mode,
         class_mode="categorical",
@@ -207,16 +197,14 @@ def retrain(
 
     num_classes = train_gen.num_classes
 
-    # class weights (untuk imbalance)
-    counts = {k: int(v) for k, v in train_gen.classes.tolist().__class__ == list and []}  # dummy to satisfy lint
-    # compute from generator
+    # Class weights for imbalance handling
     unique, freq = np.unique(train_gen.classes, return_counts=True)
     class_weight = {}
     total = float(np.sum(freq))
     for cls_id, f in zip(unique, freq):
         class_weight[int(cls_id)] = total / (len(unique) * float(f))
 
-    # build model
+    # Build the selected model
     if model_key == "cnn":
         model = _build_cnn(img_size=img_size, num_classes=num_classes)
     elif model_key == "resnet50":
@@ -224,7 +212,7 @@ def retrain(
     else:
         raise ValueError("model_key must be 'cnn' or 'resnet50'")
 
-    # callbacks
+    # Callbacks for monitoring and saving best model
     out_dir = ACTIVE_ROOT / model_key
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -244,11 +232,11 @@ def retrain(
         verbose=1,
     )
 
-    # save final active model
+    # Save model
     model_path = out_dir / "model.keras"
-    keras.saving.save_model(model, str(model_path))  # Keras 3 safe save
+    keras.saving.save_model(model, str(model_path))
 
-    # meta
+    # Save meta data
     labels = list(train_gen.class_indices.keys())
     meta = {
         "model_key": model_key,
@@ -262,7 +250,7 @@ def retrain(
     (out_dir / "meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
     (out_dir / "version.txt").write_text(version, encoding="utf-8")
 
-    # return info
+    # Return training results
     return {
         "model_key": model_key,
         "version": version,
