@@ -99,6 +99,10 @@ def _build_cnn(img_size: int, num_classes: int):
     return model
 
 
+from tensorflow.keras.applications import ResNet50
+from tensorflow.keras.layers import GlobalAveragePooling2D, Dropout, Dense
+from tensorflow.keras import models
+
 def _build_resnet50(img_size: int, num_classes: int):
     """
     ResNet50 transfer learning.
@@ -110,25 +114,29 @@ def _build_resnet50(img_size: int, num_classes: int):
         weights="imagenet",
         input_shape=(img_size, img_size, 3),
     )
-    # freeze most layers
+    # Freeze most layers
     for layer in base.layers[:-10]:
         layer.trainable = False
 
     inputs = keras.Input(shape=(img_size, img_size, 3))
     x = base(inputs, training=False)
-    x = layers.GlobalAveragePooling2D()(x)
-    x = layers.Dropout(0.5)(x)
-    x = layers.Dense(128, activation="relu")(x)
-    x = layers.Dropout(0.4)(x)
-    outputs = layers.Dense(num_classes, activation="softmax")(x)
+    
+    # Add GlobalAveragePooling2D before Flatten or Dense
+    x = GlobalAveragePooling2D()(x)  # Adding pooling layer instead of Flatten directly
+    
+    x = Dropout(0.5)(x)
+    x = Dense(128, activation="relu")(x)
+    x = Dropout(0.4)(x)
+    outputs = Dense(num_classes, activation="softmax")(x)
 
-    model = keras.Model(inputs, outputs, name="resnet50_emotion")
+    model = models.Model(inputs, outputs, name="resnet50_emotion")
     model.compile(
         optimizer=keras.optimizers.Adam(learning_rate=1e-4),
         loss="categorical_crossentropy",
         metrics=["accuracy"],
     )
     return model
+
 
 
 def retrain(
