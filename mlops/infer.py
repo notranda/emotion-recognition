@@ -91,3 +91,16 @@ def predict(frame_bgr, model_key: str = "cnn"):
 
     label = labels[pred_idx] if pred_idx < len(labels) else str(pred_idx)
     return label, conf, probs, meta
+
+import numpy as np
+import cv2
+
+def preprocess_image(frame_bgr):
+    # Cek jika gambar grayscale (shape 2D)
+    if len(frame_bgr.shape) == 2:  # grayscale: (height, width)
+        frame_bgr = np.repeat(frame_bgr[:, :, np.newaxis], 3, axis=2)  # Ubah jadi RGB (height, width, 3)
+
+    # Pastikan gambar dalam format RGB
+    frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)  # Convert BGR ke RGB
+
+    return frame_rgb
