@@ -52,26 +52,26 @@ def load_model(model_key: str) -> keras.Model:
 
 
 def preprocess_frame(frame_bgr, model_key: str, img_size: int):
-    """
-    Request kamu:
-    - gambar selalu diubah ke grayscale dulu untuk prediksi.
-    - CNN: (1,H,W,1)
-    - ResNet50: (1,H,W,3) -> grayscale direplikasi jadi 3 channel
-    """
     if frame_bgr is None:
         raise ValueError("frame_bgr is None")
 
+    # Convert to grayscale
     gray = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2GRAY)
-    resized = cv2.resize(gray, (img_size, img_size))
-    x = resized.astype("float32") / 255.0
-
+    
     if model_key == "cnn":
-        x = np.expand_dims(x, axis=-1)  # (H,W,1)
+        # Resize the grayscale image for CNN
+        resized = cv2.resize(gray, (img_size, img_size))
+        x = resized.astype("float32") / 255.0  # Normalize pixel values
+        x = np.expand_dims(x, axis=-1)  # Add the channel dimension for CNN (grayscale)
     else:
-        x = np.stack([x, x, x], axis=-1)  # (H,W,3)
+        # For ResNet50, convert to 3 channels (grayscale replicated as RGB)
+        resized = cv2.resize(gray, (img_size, img_size))
+        x = resized.astype("float32") / 255.0  # Normalize pixel values
+        x = np.stack([x, x, x], axis=-1)  # Convert to RGB by stacking the same grayscale image into 3 channels
 
-    x = np.expand_dims(x, axis=0)  # (1,H,W,C)
+    x = np.expand_dims(x, axis=0)  # Add batch dimension
     return x
+
 
 
 def predict(frame_bgr, model_key: str = "cnn"):
@@ -91,16 +91,3 @@ def predict(frame_bgr, model_key: str = "cnn"):
 
     label = labels[pred_idx] if pred_idx < len(labels) else str(pred_idx)
     return label, conf, probs, meta
-
-import numpy as np
-import cv2
-
-def preprocess_image(frame_bgr):
-    # Cek jika gambar grayscale (shape 2D)
-    if len(frame_bgr.shape) == 2:  # grayscale: (height, width)
-        frame_bgr = np.repeat(frame_bgr[:, :, np.newaxis], 3, axis=2)  # Ubah jadi RGB (height, width, 3)
-
-    # Pastikan gambar dalam format RGB
-    frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)  # Convert BGR ke RGB
-
-    return frame_rgb

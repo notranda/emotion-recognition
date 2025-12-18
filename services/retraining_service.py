@@ -103,38 +103,50 @@ from tensorflow.keras.applications import ResNet50
 from tensorflow.keras.layers import GlobalAveragePooling2D, Dropout, Dense
 from tensorflow.keras import models
 
+from tensorflow.keras.applications import ResNet50
+from tensorflow.keras.layers import GlobalAveragePooling2D, Dropout, Dense
+from tensorflow.keras import models
+
 def _build_resnet50(img_size: int, num_classes: int):
     """
     ResNet50 transfer learning.
     Input: (img_size,img_size,3)
     NOTE: Kita akan train dengan grayscale-replicated RGB (pipeline preprocessing bisa atur).
     """
+    # Inisialisasi base model ResNet50 tanpa fully connected layers
     base = keras.applications.ResNet50(
-        include_top=False,
+        include_top=False,  # Tanpa fully connected layers
         weights="imagenet",
-        input_shape=(img_size, img_size, 3),
+        input_shape=(img_size, img_size, 3),  # Input RGB
     )
-    # Freeze most layers
-    for layer in base.layers[:-10]:
+
+    # Freeze most layers of the base model untuk fine-tuning
+    for layer in base.layers[:-10]:  # Membekukan layer yang tidak perlu
         layer.trainable = False
 
+    # Input layer
     inputs = keras.Input(shape=(img_size, img_size, 3))
-    x = base(inputs, training=False)
-    
-    # Add GlobalAveragePooling2D before Flatten or Dense
-    x = GlobalAveragePooling2D()(x)  # Adding pooling layer instead of Flatten directly
-    
+    x = base(inputs, training=False)  # Base model tanpa training
+
+    # Menggunakan GlobalAveragePooling2D untuk meratakan feature map menjadi vektor 1D
+    x = GlobalAveragePooling2D()(x)  # Meratakan output menjadi vektor 1D
+
+    # Dropout untuk regularisasi
     x = Dropout(0.5)(x)
+
+    # Fully connected layers
     x = Dense(128, activation="relu")(x)
     x = Dropout(0.4)(x)
     outputs = Dense(num_classes, activation="softmax")(x)
 
+    # Build model
     model = models.Model(inputs, outputs, name="resnet50_emotion")
     model.compile(
         optimizer=keras.optimizers.Adam(learning_rate=1e-4),
         loss="categorical_crossentropy",
         metrics=["accuracy"],
     )
+
     return model
 
 

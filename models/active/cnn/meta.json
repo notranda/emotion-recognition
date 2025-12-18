@@ -1,7 +1,7 @@
 {
   "model_key": "cnn",
   "dataset": "kaggle: msambare/fer2013",
-  "version": "v20251214-200730",
+  "version": "v20251218-040858",
   "img_size": 48,
   "color_mode": "grayscale",
   "class_indices": {
@@ -13,5 +13,5 @@
     "sad": 5,
     "surprise": 6
   },
-  "trained_at": "2025-12-14T20:07:30.461243"
+  "trained_at": "2025-12-18T04:08:58.792531"
 }
